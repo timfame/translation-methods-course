@@ -1,0 +1,55 @@
+Lexer:
+AND    <- "and"        ;
+OR     <- "or"         ;
+XOR    <- "xor"        ;
+NOT    <- "not"        ;
+TRUE   <- "true"       ;
+FALSE  <- "false"      ;
+LP     <- "("          ;
+RP     <- ")"          ;
+WS     << '[ \t\r\n]+' ;
+
+Parser:
+
+d returns [boolean val]
+    -> x dp[{x.val}] {$val = dp.val;}
+    ;
+
+dp[boolean outer] returns [boolean val]
+    -> OR  x {$val = outer | x.val;}
+           dp[{$val}] {$val = dp.val;}
+     | eps   {$val = outer;}
+     ;
+
+x returns [boolean val]
+    -> c xp[{c.val}] {$val = xp.val;}
+    ;
+
+xp[boolean outer] returns [boolean val]
+    -> XOR c {$val = outer ^ c.val;}
+           xp[{$val}] {$val = xp.val;}
+     | eps   {$val = outer;}
+     ;
+
+c returns [boolean val]
+    -> n cp[{n.val}] {$val = cp.val;}
+    | cp[false]
+    | RP
+    ;
+
+cp[boolean outer] returns [boolean val]
+    -> AND  n {$val = outer & n.val;}
+            cp[{$val}] {$val = cp.val;}
+     | eps    {$val = outer;}
+     ;
+
+n returns [boolean val]
+    -> NOT v {$val = !v.val;}
+    |  v     {$val = v.val;}
+    ;
+
+v returns [boolean val]
+    -> TRUE    {$val = true; }
+    |  FALSE   {$val = false;}
+    |  LP d RP {$val = d.val;}
+    ;

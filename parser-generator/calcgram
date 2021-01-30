@@ -1,0 +1,41 @@
+Lexer:
+PLUS   <- "+"          ;
+MINUS  <- "-"          ;
+MUL    <- "*"          ;
+DIV    <- "/"          ;
+NUMBER <- '[0-9]+'     ;
+LP     <- "("          ;
+RP     <- ")"          ;
+WS     << '[ \t\r\n]+' ;
+
+Parser:
+
+e returns [int val]
+    -> t ep[{t.val}] {$val = ep.val;}
+    ;
+
+ep[int outer] returns [int val]
+    -> PLUS  t {$val = outer + t.val;}
+             ep[{$val}] {$val = ep.val;}
+     | MINUS t {$val = outer - t.val;}
+             ep[{$val}] {$val = ep.val;}
+     | eps     {$val = outer;}
+     ;
+
+t  returns [int val]
+    -> f tp[{f.val}]  {$val = tp.val;}
+    ;
+
+tp[int outer] returns [int val]
+    -> MUL f {$val = outer * f.val;}
+           tp[{$val}] {$val = tp.val; }
+    |  DIV f {$val = outer / f.val;}
+           tp[{$val}] {$val = tp.val; }
+    |  eps   {$val = outer;}
+    ;
+
+f returns [int val]
+    -> NUMBER {$val = Integer.parseInt(@@);}
+    | MINUS f {$val = -f.val;}
+    | LP e RP {$val = e.val;}
+    ;
